@@ -4,8 +4,9 @@
 import re
 from math import factorial
 from collections import namedtuple
+import pdb
 
-DEFINITION_PATH = "test.def"
+DEFINITION_PATH = "2x2.def"
 MAX_ARRAY_SIZE = 10000000
 
 
@@ -68,7 +69,7 @@ def perm_decode(N,length):
 def compose_permutations(perm1, perm2):
 	out = [None for i in range(len(perm1))]
 	for i in range(len(perm1)):
-		out[perm2[i]] = perm1[i]
+		out[i] = perm2[perm1[i]]
 	return out
 
 # Utility functions with dealing with orientations
@@ -76,16 +77,22 @@ def compose_permutations(perm1, perm2):
 def orientation_to_int(arr, states):
 	return sum([j*states**i for i,j in enumerate(reversed(arr))])
 
-def orientation_from_int(N, states):
+def orientation_from_int(N, states, pieces):
 	out = []
 	while N != 0:
 		out.append(N%states)
 		N //= states
-	return out[::-1]
+	out = out[::-1]
+	while len(out) != pieces:
+		out = [0] + out
+	return out
 
 def compose_orientations(orientation1, orientation2, states):
 	return [(i+j)%states for i,j in zip(orientation1, orientation2)]
 
+def update_orientations(current_orientations, update_orientations, permutation, orientations):
+#	return compose_permutations(permutation, compose_orientations(current_orientations, update_orientations, orientations))
+	return compose_orientations(compose_permutations(permutation, current_orientations), update_orientations, orientations)
 # Generation of move tables
 def gen_move_tables():
 	"""
@@ -109,10 +116,10 @@ def gen_move_tables():
 			current_info = moves_list[move][piece_type]
 			current_info[0] = list(map(lambda x: x-1, current_info[0])) # subtract 1 from the permutation of the move for proper execution of code
 			n, orientations = piece_types[piece_type]
-			permutation_table = [compose_permutations(perm_decode(i,n),current_info[0]) for i in range(factorial(n))]
+			permutation_table = [compose_permutations(current_info[0],perm_decode(i,n)) for i in range(factorial(n))]
 			orientation_table = None
-			if len(current_info) == 2:
-				orientation_table = [compose_orientations(orientation_from_int(i, orientations),current_info[1],orientations) for i in range(n**orientations)]
+#			orientation_table = [compose_orientations(orientation_from_int(i, orientations,n),current_info[1],orientations) for i in range(orientations**n)]
+			orientation_table = [update_orientations(orientation_from_int(i, orientations, n), current_info[1] if len(current_info) == 2 else [0]*n, current_info[0], orientations) for i in range(orientations**n)]
 			current_move_tables[piece_type] = [permutation_table, orientation_table]
 		move_table[move] = current_move_tables
 	return move_table
@@ -130,10 +137,11 @@ def apply_move(cube, move):
 			n, orientations = piece_types[piece_type]
 			new_state_pieces = []
 			new_state_pieces.append(move_info[piece_type][0][perm_encode(cube.state[piece_type][0])]) # Update permutation information
-			if len(move_info[piece_type]) != 2 or not move_info[piece_type][1]:
-				new_state_pieces.append(cube.state[piece_type][1]) # No changes to orientation
-			else:
-				new_state_pieces.append(move_info[piece_type][1][orientation_to_int(cube.state[piece_type][1], orientations)])  # Update orientation information
+			if len(move_info[piece_type]) != 2:
+				move_info[piece_info] = [move_info[piece_type][0], None]
+			if not move_info[piece_type][1]:
+				move_info[piece_type][1] = [[0] * n for i in range(orientations**n)] # No changes to orientation
+			new_state_pieces.append(move_info[piece_type][1][orientation_to_int(cube.state[piece_type][1], orientations)])  # Update orientation information
 			new_state[piece_type] = new_state_pieces
 		return Cube(cube.moves + [move], new_state)
 	else:
@@ -142,10 +150,12 @@ def apply_move(cube, move):
 			n, orientations = piece_types[piece_type]
 			new_state_pieces = []
 			new_state_pieces.append(compose_permutations(cube.state[piece_type][0], move_info[piece_type][0])) # Update permutation information
-			if len(move_info[piece_type]) != 2 or not move_info[piece_type][1]:
-				new_state_pieces.append(cube.state[piece_type][1]) # No changes to orientation
-			else:
-				new_state_pieces.append(compose_orientations(cube.state[piece_type][1], move_info[piece_type][1], orientations)) # Update orientation information
+			if len(move_info[piece_type]) != 2:
+				move_info[piece_info] = [move_info[piece_type][0], None]
+			if not move_info[piece_type][1]:
+				move_info[piece_type][1] = [0] * n # No changes to orientation
+			#new_state_pieces.append(compose_orientations(cube.state[piece_type][1], move_info[piece_type][1], orientations)) 
+			new_state_pieces.append(update_orientations(cube.state[piece_type][1], move_info[piece_type][1], move_info[piece_type][0], orientations)) # Update orientation information
 			new_state[piece_type] = new_state_pieces
 		return Cube(cube.moves + [move], new_state)
 # Function to return a solved cube object
@@ -155,12 +165,20 @@ def get_solved_cube():
 		n = piece_types[piece_type][0]
 		state[piece_type] = [list(range(n)),[0 for i in range(n)]]
 	return Cube([], state)
+
 # Test code
 solved_cube = get_solved_cube()
-print("cube with move table")
-cube = apply_move(solved_cube, 'U')
+
+t_perm = "R U R R R U U U R R R F R R U U U R R R U U U R U R R R F F F".split()
+t_perm_cube = solved_cube
+print(t_perm_cube.state)
+for move in t_perm:
+	t_perm_cube = apply_move(t_perm_cube, move)
+	print(t_perm_cube.state)
+"""
+cube = apply_move(solved_cube, "R")
+cube = apply_move(cube, "U")
 print(cube)
-print("cube with no move table")
-move_table = None
-cube = apply_move(solved_cube, 'U')
-print(cube)
+# permutation should be [3,0,2,5,1,4,6]
+
+"""
