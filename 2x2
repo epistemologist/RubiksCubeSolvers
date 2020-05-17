@@ -1,0 +1,33 @@
+Set Corners 7 3
+
+BeginMoves
+Move U
+Corners
+3 0 1 2 4 5 6
+End
+
+Move R
+Corners
+0 2 5 3 1 4 6
+0 2 1 0 1 2 0
+End
+
+Move F
+Corners
+0 1 3 6 4 2 5
+0 0 2 1 0 1 2
+End
+EndMoves
+BeginDefinedMoves
+R'	R R R
+R2	R R
+U'	U U U
+U2	U U
+F'	F F F
+F2	F F
+EndDefinedMoves
+BeginCancelMoves
+R'	R R2
+R2	R' R
+R	R' R2
+EndCancelMoves
