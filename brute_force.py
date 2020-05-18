@@ -6,7 +6,7 @@ from math import factorial
 from collections import namedtuple
 import pdb
 
-DEFINITION_PATH = "2x2"
+DEFINITION_PATH = "3x3.def"
 MAX_ARRAY_SIZE = 500000000
 
 
@@ -25,7 +25,8 @@ for line in move_lines:
 		moves.append(temp)
 		temp = []
 print(moves)
-moves = [i[1:-1] for i in moves][:-1]
+moves = [j for j in [i[1:-1] for i in moves] if len(j)>0]
+print("moves", moves)
 solved_state = moves[0]
 defined_moves = [line.strip().split("\t") for line in lines[lines.index("BeginDefinedMoves\n")+1:lines.index("EndDefinedMoves\n")]]
 defined_moves = {i[0]:i[1].split() for i in defined_moves}
@@ -34,6 +35,7 @@ cancellable_moves = {i[0]:i[1].split() for i in cancellable_moves}
 print(cancellable_moves)
 moves_list = {}
 for move in moves:
+	print(move, moves_list)
 	move_name, move = move[0].replace("Move", ""), move[1:]
 	labels = [move.index(i) for i in move if not i.replace(" ","").isdigit()]
 	splits = [(labels[i],labels[i+1]) for i in range(len(labels)-1)] + [(labels[-1],len(move))]
@@ -71,7 +73,7 @@ def perm_decode(N,length):
 def compose_permutations(perm1, perm2):
 	out = [None for i in range(len(perm1))]
 	for i in range(len(perm1)):
-		out[i] = perm2[perm1[i]]
+		out[i] = perm1[perm2[i]]
 	return out
 
 # Utility functions with dealing with orientations
@@ -94,7 +96,7 @@ def compose_orientations(orientation1, orientation2, states):
 
 def update_orientations(current_orientations, update_orientations, permutation, orientations):
 #	return compose_permutations(permutation, compose_orientations(current_orientations, update_orientations, orientations))
-	return compose_orientations(compose_permutations(permutation, current_orientations), update_orientations, orientations)
+	return compose_orientations(compose_permutations(current_orientations, permutation), update_orientations, orientations)
 
 # Parse defined moves
 def get_defined_move(moves):
@@ -145,7 +147,7 @@ def gen_move_tables():
 		move_table[move] = current_move_tables
 	return move_table
 
-move_table = gen_move_tables()
+#move_table = gen_move_tables()
 
 Cube = namedtuple("Cube", "moves state")
 
@@ -159,7 +161,7 @@ def apply_move(cube, move):
 			new_state_pieces = []
 			new_state_pieces.append(perm_decode(move_info[piece_type][0][perm_encode(cube.state[piece_type][0])], n)) # Update permutation information
 			if len(move_info[piece_type]) != 2:
-				move_info[piece_info] = [move_info[piece_type][0], None]
+				move_info[piece_type] = [move_info[piece_type][0], None]
 			if not move_info[piece_type][1]:
 				move_info[piece_type][1] = 0 # No changes to orientation
 			new_state_pieces.append(orientation_from_int(move_info[piece_type][1][orientation_to_int(cube.state[piece_type][1], orientations)], orientations, n))  # Update orientation information
@@ -172,15 +174,13 @@ def apply_move(cube, move):
 			new_state_pieces = []
 			new_state_pieces.append(compose_permutations(cube.state[piece_type][0], move_info[piece_type][0])) # Update permutation information
 			if len(move_info[piece_type]) != 2:
-				move_info[piece_info] = [move_info[piece_type][0], None]
+				move_info[piece_type] = [move_info[piece_type][0], None]
 			if not move_info[piece_type][1]:
 				move_info[piece_type][1] = [0] * n # No changes to orientation
 			#new_state_pieces.append(compose_orientations(cube.state[piece_type][1], move_info[piece_type][1], orientations)) 
 			new_state_pieces.append(update_orientations(cube.state[piece_type][1], move_info[piece_type][1], move_info[piece_type][0], orientations)) # Update orientation information
 			new_state[piece_type] = new_state_pieces
 		return Cube(cube.moves + [move], new_state)
-		
-		
 
 # Function to return a solved cube object
 def get_solved_cube():
@@ -190,13 +190,16 @@ def get_solved_cube():
 		state[piece_type] = [list(range(n)),[0 for i in range(n)]]
 	return Cube([], state)
 
-# Test code
-solved_cube = get_solved_cube()
+# Function to apply an algorithm to a cube
+def apply_algorithm(cube, alg):
+	for move in alg:
+		cube = apply_move(cube, move)
+	return cube
 
-t_perm = "R U R' U' R' F R2 U' R' U' R U R' F'".split()
-t_perm_cube = solved_cube
-print(t_perm_cube.state)
-for move in t_perm:
-	t_perm_cube = apply_move(t_perm_cube, move)
-	print(t_perm_cube.state)
-print(get_defined_move(["R","R"]))
+
+# Test code
+#move_table = gen_move_tables()
+move_table = None
+solved_cube = get_solved_cube()
+f = lambda s: apply_algorithm(get_solved_cube(), s.split())
+print(apply_algorithm(get_solved_cube(), "R R R R".split()))
