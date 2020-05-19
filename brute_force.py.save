@@ -16,7 +16,6 @@ lines = [line for line in lines if "#" not in line] # Removed commented lines
 text = "".join(lines)
 piece_types = [i.replace("Set",'').split() for i in re.findall("Set .*", text)]
 piece_types = {i[0]:(int(i[1]),int(i[2])) for i in piece_types}
-piece_type_list = list(piece_types.keys()) # To maintain order
 move_lines = lines[lines.index("BeginMoves\n"):lines.index("EndMoves\n")+1]
 moves = []
 temp = []
@@ -34,7 +33,6 @@ defined_moves = {i[0]:i[1].split() for i in defined_moves}
 cancellable_moves = [line.strip().split("\t") for line in lines[lines.index("BeginCancelMoves\n")+1:lines.index("EndCancelMoves\n")]]
 cancellable_moves = {i[0]:i[1].split() for i in cancellable_moves}
 print(cancellable_moves)
-cancellable_moves[None] = []
 moves_list = {}
 for move in moves:
 	print(move, moves_list)
@@ -151,34 +149,7 @@ def gen_move_tables():
 
 #move_table = gen_move_tables()
 
-#Cube = namedtuple("Cube", "moves state")
-class Cube(namedtuple("Cube","moves state")):
-	def __str__(self):
-		move_string = " ".join(self.moves)
-		state = []
-		for piece in piece_type_list:
-			n, orientations = piece_types[piece]
-			state_info = self.state[piece]
-			if len(state_info) < 2:
-				permutation, orientation = state_info, 0
-				state.append(perm_encode(permutation))
-				state.append(0)
-			else:
-				permutation, orientation  = state_info
-				state.append(perm_encode(permutation))
-				state.append(orientation_to_int(orientation, orientations))
-		return move_string + "\t" + " ".join([str(i) for i in state])
-def cube_from_string(s):
-	move_string, state_string = s.split("\t")
-	moves = move_string.split()
-	cube_state = {}
-	state = [int(i) for i in state_string.split()]
-	state = [state[i:i+2] for i in range(0, len(state), 2)]
-	for i in range(len(state)):
-		piece = piece_type_list[i]
-		n, orientations = piece_types[piece]
-		cube_state[piece] = [perm_decode(state[i][0], n), orientation_from_int(state[i][1], orientations, n)]
-	return Cube(moves, cube_state)
+Cube = namedtuple("Cube", "moves state")
 
 # Function that applies a move to a cube
 def apply_move(cube, move):
@@ -225,14 +196,6 @@ def apply_algorithm(cube, alg):
 		cube = apply_move(cube, move)
 	return cube
 
-# Function to return all the possible cubes that can be gotten from the given cube by applying a move
-def get_next_cubes(cube):
-	out = []
-	last_move = cube.moves[-1] if len(cube.moves) > 0 else None
-	for move in moves_list.keys():
-		if move != last_move and move not in cancellable_moves[last_move]:
-			out.append(apply_move(cube, move))
-	return out
 
 # Test code
 #move_table = gen_move_tables()

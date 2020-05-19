@@ -67,4 +67,22 @@ B'	B B B
 B2	B B
 EndDefinedMoves
 BeginCancelMoves
+R	R' R2
+R'	R R2
+R2	R R'
+U	U' U2
+U'	U U2
+U2	U U'
+F	F' F2
+F'	F F2
+F2	F F'
+L	L' L2
+L'	L L2
+L2	L L'
+D	D' D2
+D'	D D2
+D2	D D'
+B	B' B2
+B'	B B2
+B2	B B'
 EndCancelMoves
