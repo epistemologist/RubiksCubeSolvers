@@ -285,8 +285,8 @@ def dfs2(n_moves):
 	return [len(i) for i in tree]
 """
 # Test code
-#move_table = gen_move_tables()
-move_table = None
+move_table = gen_move_tables()
+# move_table = None
 solved_cube = get_solved_cube()
 f = lambda s: apply_algorithm(get_solved_cube(), s.split())
 
