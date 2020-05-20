@@ -248,7 +248,7 @@ def get_next_cubes(cube):
 			out.append(apply_move(cube, move))
 	return out
 
-def dfs(n_moves):
+def bfs(n_moves):
 	tree = [[get_solved_cube()]]
 	cube_states = set([get_solved_cube().get_state()])
 	for i in range(n_moves):
@@ -261,7 +261,18 @@ def dfs(n_moves):
 					current_gen.append(next_cube)
 					cube_states.add(next_cube_state)
 		tree.append(current_gen)
-	return [len(i) for i in tree]
+	return tree
+
+def write_table(n_moves, filename):
+	tree = bfs(n_moves)
+	f = open(filename, "w")
+	for i in range(len(tree)):
+		print(i)
+		gen = tree[i]
+		for cube in gen:
+			f.write(str(cube))
+			f.write("\n")
+	f.close()
 """
 def dfs2(n_moves):
 	tree = [[get_solved_cube()]]
@@ -278,3 +289,4 @@ def dfs2(n_moves):
 move_table = None
 solved_cube = get_solved_cube()
 f = lambda s: apply_algorithm(get_solved_cube(), s.split())
+
