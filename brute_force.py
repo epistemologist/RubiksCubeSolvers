@@ -6,7 +6,7 @@ from math import factorial
 from collections import namedtuple
 import pdb
 
-DEFINITION_PATH = "3x3.def"
+DEFINITION_PATH = "2x2.def"
 MAX_ARRAY_SIZE = 500000000
 
 
@@ -151,7 +151,7 @@ def gen_move_tables():
 
 #move_table = gen_move_tables()
 
-#Cube = namedtuple("Cube", "moves state")
+# Class to represent a cube
 class Cube(namedtuple("Cube","moves state")):
 	def __str__(self):
 		move_string = " ".join(self.moves)
@@ -168,6 +168,20 @@ class Cube(namedtuple("Cube","moves state")):
 				state.append(perm_encode(permutation))
 				state.append(orientation_to_int(orientation, orientations))
 		return move_string + "\t" + " ".join([str(i) for i in state])
+	def get_state(self):
+		out = []
+		for piece in piece_type_list:
+			n, orientations = piece_types[piece]
+			state_info = self.state[piece]
+			if len(state_info) < 2:
+				permutation, orientation = state_info, 0
+				out.append(perm_encode(permutation))
+				out.append(0)
+			else:
+				permutation, orientation  = state_info
+				out.append(perm_encode(permutation))
+				out.append(orientation_to_int(orientation, orientations))
+		return tuple(out)
 def cube_from_string(s):
 	move_string, state_string = s.split("\t")
 	moves = move_string.split()
@@ -206,7 +220,7 @@ def apply_move(cube, move):
 				move_info[piece_type] = [move_info[piece_type][0], None]
 			if not move_info[piece_type][1]:
 				move_info[piece_type][1] = [0] * n # No changes to orientation
-			#new_state_pieces.append(compose_orientations(cube.state[piece_type][1], move_info[piece_type][1], orientations)) 
+			#new_state_pieces.append(compose_orientations(cube.state[piece_type][1], move_info[piece_type][1], orientations))
 			new_state_pieces.append(update_orientations(cube.state[piece_type][1], move_info[piece_type][1], move_info[piece_type][0], orientations)) # Update orientation information
 			new_state[piece_type] = new_state_pieces
 		return Cube(cube.moves + [move], new_state)
@@ -234,9 +248,33 @@ def get_next_cubes(cube):
 			out.append(apply_move(cube, move))
 	return out
 
+def dfs(n_moves):
+	tree = [[get_solved_cube()]]
+	cube_states = set([get_solved_cube().get_state()])
+	for i in range(n_moves):
+		print(i, len(tree[-1]))
+		current_gen = []
+		for cube in tree[-1]:
+			for next_cube in get_next_cubes(cube):
+				next_cube_state = next_cube.get_state()
+				if next_cube_state not in cube_states:
+					current_gen.append(next_cube)
+					cube_states.add(next_cube_state)
+		tree.append(current_gen)
+	return [len(i) for i in tree]
+"""
+def dfs2(n_moves):
+	tree = [[get_solved_cube()]]
+	cube_states = [get_solved_cube().state]
+	for i in range(n_moves):
+		current_gen = []
+		for cube in tree[-1]:
+			current_gen.extend(get_next_cubes(cube))
+		tree.append(current_gen)
+	return [len(i) for i in tree]
+"""
 # Test code
 #move_table = gen_move_tables()
 move_table = None
 solved_cube = get_solved_cube()
 f = lambda s: apply_algorithm(get_solved_cube(), s.split())
-print(apply_algorithm(get_solved_cube(), "R R R R".split()))
