@@ -114,8 +114,7 @@ def get_defined_move(moves):
 for move in defined_moves:
 	moves_list[move] = get_defined_move(defined_moves[move])
 
-# Generation of move tables
-
+# Generation of move tables (Will try to make this work later)
 def gen_move_tables():
 	"""
 	Returns a nested dictionary in following form
@@ -150,7 +149,6 @@ def gen_move_tables():
 	return move_table
 
 #move_table = gen_move_tables()
-
 # Class to represent a cube
 class Cube(namedtuple("Cube","moves state")):
 	def __str__(self):
@@ -168,6 +166,10 @@ class Cube(namedtuple("Cube","moves state")):
 				state.append(perm_encode(permutation))
 				state.append(orientation_to_int(orientation, orientations))
 		return move_string + "\t" + " ".join([str(i) for i in state])
+	def __eq__(self, other):
+		return self.state == other.state
+	def __hash__(self):
+		return hash(self.state)
 	def get_state(self):
 		out = []
 		for piece in piece_type_list:
