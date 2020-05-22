@@ -140,7 +140,7 @@ def gen_move_tables():
 			current_info = moves_list[move][piece_type]
 #			current_info[0] = list(map(lambda x: x-1, current_info[0])) # subtract 1 from the permutation of the move for proper execution of code
 			n, orientations = piece_types[piece_type]
-			permutation_table = [perm_encode(compose_permutations(current_info[0],perm_decode(i,n))) for i in range(factorial(n))]
+			permutation_table = [perm_encode(compose_permutations(perm_decode(i,n),current_info[0])) for i in range(factorial(n))]
 			orientation_table = None
 #			orientation_table = [compose_orientations(orientation_from_int(i, orientations,n),current_info[1],orientations) for i in range(orientations**n)]
 			orientation_table = [orientation_to_int(update_orientations(orientation_from_int(i, orientations, n), current_info[1] if len(current_info) == 2 else [0]*n, current_info[0], orientations), orientations) for i in range(orientations**n)]
@@ -292,3 +292,5 @@ move_table = gen_move_tables()
 solved_cube = get_solved_cube()
 f = lambda s: apply_algorithm(get_solved_cube(), s.split())
 
+
+temp = bfs(7)
